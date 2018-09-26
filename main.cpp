@@ -41,9 +41,9 @@ int main(int argc, char *argv[]) {
     // C ∈ Rn -> cj = sum i wij
     vector<double> c(n , 0);
 
-    for (i = 0; i < n; ++i)
-        for (map<uint, double>::iterator col_it = W[i].begin(); col_it != W[i].end(); col_it++)
-            c[i] += col_it->second;
+    for (j = 0; j < n; ++j)
+        for (map<uint, double>::iterator col_it = W[j].begin(); col_it != W[j].end(); col_it++)
+            c[j] += col_it->second;
 
     // A = I−pWD
     vector<map<uint, double>> A(n, map<uint, double>());
