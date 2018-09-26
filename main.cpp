@@ -50,13 +50,12 @@ int main(int argc, char *argv[]) {
 
     // WD ∈ Rn×n -> wdij cj != 0 ? wij/cj : 0
     // pWD ∈ Rn×n -> wdij cj != 0 ? p wij/cj : 0
-    for (i = 0; i < n; ++i)
-        for (j = 0; j < n; ++j)
-            if(c[j] != 0)
-                A[i][j] = p * W[i][j] / c[j];
-
     // I-pWD ∈ Rn×n
-    for (i = 0; i < n; ++i) A[i][i] = 1 - A[i][i];
+    for (i = 0; i < n; ++i)
+        for (j = 0; j < n; ++j) {
+            if (c[j] != 0) A[i][j] = p * W[i][j] / c[j];
+            if (i == j) A[i][j] = 1 - A[i][j];
+        }
 
     vector<double> e(n, 1);
 
