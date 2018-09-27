@@ -62,74 +62,64 @@ int main(int argc, char *argv[]) {
     vector<double> ranking(n, 0);
 
     double A_jj, A_ij;
-    short status = 0;
 
-    // Iteracion sobre las columnas de A, excepto la ultima porque ahi no hay que hacer nada
+    // Iteracion sobre las columnas de A, excepto la ultima
     for (j = 0; j < n - 1; ++j) {
         map<uint, double>::iterator it_fila_j = A[j].begin();
-
         i = j;
-        //Mientras el i-esimo elemento no nulo de la fila i no está en la columna j...
+
+        // Mientras el i-esimo elemento no nulo de la fila i no está en la columna j
         while (i < n && (it_fila_j == A[j].end() || it_fila_j->first != j))
-            it_fila_j = A[++i].begin();     //avanzo a la siguiente fila.
-            //Si encontre una fila con elemento no nulo en la columna j...
-            if (i < n) {
-                //Cambio de lugar las filas (para que no haya un 0 en la diagonal).
-                A[j].swap(A[i]);
-                //En consecuencia debo cambiar también el orden de e.
-                double bb_m = e[j];
-                e[j] = e[i];
-                e[i] = bb_m;
-                //Debido al swap, it_fila_j es iterador de la fila j.
-                A_jj = it_fila_j->second;
-                ++i;
-                //Reviso las siguientes filas.
-                while (i < n) {
-                    map<uint, double>::iterator it1 = A[i].begin();
-                    map<uint, double>::iterator fin1 = A[i].end();
-                    if (it1 != fin1 && it1->first == j) {  //Si el elemento en la columna j no es nulo, resto filas.
-                        A_ij = it1->second;
-                        map<uint, double>::iterator it2 = it_fila_j;
-                        ++it2;  //Voy a la siguiente columna relevante de la fila j.
-                        map<uint, double>::iterator fin2 = A[j].end();
-                        A[i].erase(it1++); //El elemento en la columna j debe quedar en 0. Voy a la siguiente columna relevante de la fila i (con it1).
-                    while (it2 != fin2) { //Mientras no haya acabado la fila para restar:
-                        double resultado_de_la_resta =-(A_ij / A_jj) * (it2->second); //empiezo restando lo que hay que restar
-                        while (it1 != fin1 && it1->first < it2->first) ++it1;
-                        if (it1 == fin1 || it1->first > it2->first)
-                            if (abs(resultado_de_la_resta) > tolerance)
-                                A[i].insert(it1, make_pair(it2->first, resultado_de_la_resta));
+            // Avanza a la siguiente fila.
+            it_fila_j = A[++i].begin();
+            A_jj = it_fila_j->second;
+            ++i;
+
+            // En las siguientes filas
+            while (i < n) {
+                map<uint, double>::iterator it1 = A[i].begin();
+                map<uint, double>::iterator fin1 = A[i].end();
+
+                // Si el elemento en la columna j no es nulo => resta filas.
+                if (it1 != fin1 && it1->first == j) {
+                    A_ij = it1->second;
+                    map<uint, double>::iterator it2 = it_fila_j;
+                    ++it2;  // Siguiente columna de la fila j.
+                    map<uint, double>::iterator fin2 = A[j].end();
+                    A[i].erase(it1++); // El elemento en la columna j debe quedar en 0. it1 = siguiente columna de la fila i.
+
+                    // Mientras no haya acabado la fila, resta de cada elemento
+                    while (it2 != fin2) {
+                        double resultado_de_la_resta =-(A_ij / A_jj) * (it2->second);
+                        while (it1 != fin1 && it1->first < it2->first) ++it1; // it1 = siguiente posicion a restar
+                        if ((it1 == fin1 || it1->first > it2->first) &&  (abs(resultado_de_la_resta) > tolerance))
+                            A[i].insert(it1, make_pair(it2->first, resultado_de_la_resta));
                         else {
                             it1->second += resultado_de_la_resta;
-                            if (abs(it1->second) < tolerance)
-                                A[i].erase(it1++);
-                            else
-                                ++it1;
+                            if (abs(it1->second) < tolerance) A[i].erase(it1++);
+                            else ++it1;
                         }
                         ++it2;
                     }
-                    e[i] -= (A_ij / A_jj) * e[j]; // Actualizo ranking
+                    e[i] -= (A_ij / A_jj) * e[j]; // Actualiza ranking
                 }
-                ++i;
+            ++i;
             }
-        }
     }
-    for (long int i = n -1; i >= 0; --i) {
-        auto it = A[i].begin();
+
+    for (i = n -1; i >= 0; --i) {
+        map<uint, double>::iterator it = A[i].begin();
         A_jj = ((it == A[i].end() || it->first != i) ? 0 : it->second);
-        if (A_jj != 0) ++it;  //Si A_jj no es 0 avanzo "it", pués no forma parte de la siguiente resta.
+
+        if (A_jj != 0) ++it; //Si A_jj no es 0 avanzo "it", pués no forma parte de la siguiente resta.
+
         while (it != A[i].end()) {
-            e[i] -= (it->second) * ranking[it->first];   //b_i - sum_j(A_ij*x_j)
+            e[i] -= (it->second) * ranking[it->first]; //b_i - sum_j(A_ij*x_j)
             ++it;
         }
-        if (A_jj == 0 && e[i] != 0) {
-            status = -1; //el sistema es incompatible
-            break;
-        } else if (A_jj == 0 && e[i] == 0) {
-            status = 1; //hay infinitos resultados
-            ranking[i] = 0;
-        } else
-            ranking[i] = e[i] / A_jj;
+
+        if (A_jj == 0 && e[i] == 0) ranking[i] = 0;
+        else ranking[i] = e[i] / A_jj;
     }
 
     // Normalize ranking
